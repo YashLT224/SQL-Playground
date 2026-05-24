@@ -16,8 +16,8 @@ A structured, hands-on SQL learning project — built while transitioning from F
 | Week 2 | JOINs (INNER, LEFT, RIGHT, CROSS, SELF, Multiple JOINs) | Completed |
 | Week 3 | Aggregations (COUNT, SUM, AVG, MIN, MAX, DISTINCT, COALESCE) | Completed |
 | Week 4 | Subqueries & CTEs | Completed |
-| Week 5 | Indexes, EXPLAIN & Query Performance | In Progress |
-| Week 6 | Schema Design & Real-World Patterns | Upcoming |
+| Week 5 | Indexes, EXPLAIN, Transactions & ACID | Completed |
+| Week 6 | Schema Design & Real-World Patterns | Completed |
 
 ---
 
@@ -54,13 +54,24 @@ sql-learning-journey/
 │   └── 05_ctes.sql               → WITH clauses & recursive CTEs
 │
 ├── week-05-indexes-transactions/
-│   ├── 01_what_is_index.sql      → How indexes work (B-Tree intuition)
-│   ├── 02_explain_query_plan.sql → Reading EXPLAIN output
-│   ├── 03_create_index.sql       → CREATE INDEX, composite indexes
-│   ├── 04_index_types.sql        → UNIQUE, FULLTEXT, covering indexes
-│   └── 05_when_not_to_index.sql  → Anti-patterns & write-amplification
+│   ├── 01_what_is_index.sql          → How indexes work (B-Tree intuition)
+│   ├── 02_explain_query_plan.sql     → Reading EXPLAIN output
+│   ├── 03_create_index.sql           → CREATE INDEX, before/after comparison
+│   ├── 04_index_types.sql            → Composite, covering, unique indexes
+│   ├── 05_when_not_to_index.sql      → Anti-patterns & write-amplification
+│   ├── 06_transactions.sql           → COMMIT, ROLLBACK, SAVEPOINT
+│   ├── WEEK5_CONFLUENCE.md           → Indexes week notes + Q&A
+│   ├── TRANSACTIONS_CONFLUENCE.md    → Transactions & ACID notes + Q&A
+│   ├── FOREIGN_KEYS_CONFLUENCE.md    → Foreign keys deep dive + Q&A
+│   └── SCHEMA_CONCEPTS_CONFLUENCE.md → Cardinality, normalization, junction tables
 │
-└── week-06-schema-design/        → Coming soon
+└── week-06-schema-design/
+    ├── 01_schema_design_principles.sql → 6 principles before writing SQL
+    ├── 02_naming_conventions.sql       → Tables, columns, FK, index naming
+    ├── 03_create_blog_schema.sql       → Full blog schema CREATE TABLE
+    ├── 04_seed_data.sql                → INSERT data for all 5 tables
+    ├── 05_blog_queries.sql             → 8 real queries on blog data
+    └── WEEK6_CONFLUENCE.md             → Week 6 notes + Q&A
 ```
 
 Each week also ships a `WEEKx_CONFLUENCE.md` — long-form notes summarizing the week's learnings.
@@ -113,17 +124,24 @@ Each week also ships a `WEEKx_CONFLUENCE.md` — long-form notes summarizing the
 - `EXISTS` vs `IN` and when each is faster
 - Common Table Expressions (`WITH`) and recursive CTEs
 
-### Week 5 — Indexes & Performance
+### Week 5 — Indexes, Performance & Transactions
 - B-Tree intuition: why indexes make lookups O(log n)
-- Reading `EXPLAIN` output: `type`, `rows`, `Extra`
-- Single-column vs composite indexes; leftmost-prefix rule
-- `UNIQUE`, `FULLTEXT`, covering indexes
-- Anti-patterns: over-indexing, indexing low-cardinality columns
+- Reading `EXPLAIN` output: `type`, `key`, `rows`, `Extra` columns
+- Single-column, composite, covering, and unique indexes
+- Left-prefix rule for composite indexes
+- When NOT to index: low cardinality, small tables, function trap
+- Transactions: `START TRANSACTION`, `COMMIT`, `ROLLBACK`, `SAVEPOINT`
+- ACID Properties: Atomicity, Consistency, Isolation, Durability
+- Bonus concepts: Foreign Keys, Cardinality, Normalization (1NF→3NF), Junction Tables
 
-### Week 6 — Schema Design *(upcoming)*
-- Normalization (1NF → 3NF) and when to denormalize
-- Foreign keys, cascades, and referential integrity
-- Modeling 1-to-many, many-to-many, and polymorphic relations
+### Week 6 — Schema Design & Real-World Patterns
+- 6 schema design principles (entities, constraints, timestamps)
+- Industry naming conventions (tables, columns, FKs, indexes, booleans)
+- Built a real blog platform schema: `blog_users`, `posts`, `tags`, `post_tags`, `comments`
+- M:N relationships via junction tables
+- `GROUP_CONCAT` — collapse multiple rows into one string
+- Real queries: JOINs, aggregations, CTEs, subqueries on live blog data
+- Common bug: `ON p.user_id = p.user_id` vs `ON p.user_id = u.id`
 
 ---
 
@@ -136,6 +154,9 @@ Each week also ships a `WEEKx_CONFLUENCE.md` — long-form notes summarizing the
 - `LEFT JOIN` + `WHERE right.col IS NULL` is the canonical "find rows with no match" pattern.
 - `EXISTS` is usually faster than `IN` on large subqueries — it short-circuits on first match.
 - Every index speeds up reads but slows down writes — index with intent, not by reflex.
+- Always wrap multi-step writes in a transaction — partial failures leave data in a broken state.
+- `ROLLBACK` is your safety net — use it on any error inside a transaction.
+- `NOT NULL`, `UNIQUE`, `CHECK`, and `FOREIGN KEY` constraints enforce data integrity at the DB level.
 
 ---
 
